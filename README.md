@@ -6,9 +6,10 @@ Standalone chat API + widget snippet for eksido.com. Built as a single, independ
 
 1) Update `app.json` with your GitHub repo URL (replace `<YOUR_GITHUB_ORG>/<YOUR_REPO>`).
 2) Commit and push to GitHub.
-3) Click the button:
+3) Update the button URL below to include your repo as a `template=` parameter.
+4) Click the button:
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/<YOUR_GITHUB_ORG>/<YOUR_REPO>)
 
 ## Install (local)
 Prerequisites:
@@ -53,6 +54,11 @@ git commit -m "Initial Eksido Simple Web Agent"
 git branch -M main
 git remote add origin https://github.com/<YOUR_GITHUB_ORG>/<YOUR_REPO>.git
 git push -u origin main
+```
+4) Update the Heroku button link in this README to:
+
+```
+https://heroku.com/deploy?template=https://github.com/<YOUR_GITHUB_ORG>/<YOUR_REPO>
 ```
 
 ## Indexing script
