@@ -1,0 +1,32 @@
+{
+  "name": "Eksido Simple Web Agent",
+  "description": "Standalone chat API for eksido.com with OpenAI Responses API + file search",
+  "repository": "https://github.com/<YOUR_GITHUB_ORG>/<YOUR_REPO>",
+  "keywords": ["node", "express", "openai", "chat", "widget"],
+  "env": {
+    "OPENAI_API_KEY": {
+      "description": "OpenAI API key",
+      "required": true
+    },
+    "OPENAI_MODEL": {
+      "description": "Model name (default: gpt-5-mini)",
+      "required": false
+    },
+    "ALLOWED_ORIGINS": {
+      "description": "Comma-separated list of allowed origins",
+      "required": true
+    },
+    "VECTOR_STORE_ID_SITE_1": {
+      "description": "Vector store ID for site=eksidocom",
+      "required": true
+    },
+    "REQUIRE_TOKEN": {
+      "description": "Set to true to require X-Concierge-Token",
+      "required": false
+    },
+    "CONCIERGE_TOKEN_SITE_1": {
+      "description": "Token for site=eksidocom when REQUIRE_TOKEN=true",
+      "required": false
+    }
+  }
+}
