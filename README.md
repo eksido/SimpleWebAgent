@@ -4,12 +4,11 @@ Standalone chat API + widget snippet for eksido.com. Built as a single, independ
 
 ## One-click Heroku deploy
 
-1) Update `app.json` with your GitHub repo URL (replace `<YOUR_GITHUB_ORG>/<YOUR_REPO>`).
+1) Confirm `app.json` uses your GitHub repo URL.
 2) Commit and push to GitHub.
-3) Update the button URL below to include your repo as a `template=` parameter.
-4) Click the button:
+3) Click the button:
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/<YOUR_GITHUB_ORG>/<YOUR_REPO>)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/eksido/SimpleWebAgent)
 
 ## Install (local)
 Prerequisites:
