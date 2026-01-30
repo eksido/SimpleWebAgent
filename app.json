@@ -1,6 +1,6 @@
 {
   "name": "Eksido Simple Web Agent",
-  "description": "Standalone chat API for eksido.com with OpenAI Responses API + file search",
+  "description": "Standalone chat API with OpenAI Responses API + file search",
   "repository": "https://github.com/eksido/SimpleWebAgent",
   "keywords": ["node", "express", "openai", "chat", "widget"],
   "env": {

@@ -1,6 +1,6 @@
 # Eksido Simple Web Agent
 
-Standalone chat API + widget snippet for eksido.com. Built as a single, independent service.
+Standalone chat API + widget snippet. Built as a single, independent service.
 
 ## One-click Heroku deploy
 
@@ -83,7 +83,7 @@ heroku create <YOUR_APP_NAME>
 heroku config:set OPENAI_API_KEY=sk-... \
   OPENAI_MODEL=gpt-5-mini \
   VECTOR_STORE_ID_SITE_1=vs_... \
-  ALLOWED_ORIGINS=https://eksido.com,https://www.eksido.com
+  ALLOWED_ORIGINS=https://your-site.com,https://www.your-site.com
 ```
 
 Optional (token protection):
@@ -123,7 +123,7 @@ Optional:
 5) Publish the container.
 
 Verify:
-- Visit `https://eksido.com` and click **Chat with Eksido**.
+- Visit your site and click **Chat with Eksido**.
 - Send a message and confirm the `/chat?site=eksidocom` request returns `200`.
 
 ### GTM chat widget snippet
@@ -137,92 +137,318 @@ Verify:
   var apiBase = "https://<HEROKU_APP>.herokuapp.com";
   var siteParam = "eksidocom";
 
+  // --- Config ---
+  var BRAND_NAME = "Eksido";
+  var TITLE = "Eksido Concierge";
+  var GREETING = "Hi! I'm the Eksido Concierge. Ask me about services, Culture360, pricing, or how to contact us.";
+  var STORAGE_KEY = "eksido_chat_history_v1";
+
+  // --- Styles ---
   var style = document.createElement("style");
   style.textContent = "\
-#eksido-chat-widget{position:fixed;right:20px;bottom:20px;z-index:999999;font-family:Arial,Helvetica,sans-serif;}\
-#eksido-chat-button{background:#0b4d7a;color:#fff;border:none;border-radius:999px;padding:12px 18px;font-size:14px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.2);}\
-#eksido-chat-button.eksido-hidden{display:none;}\
-#eksido-chat-panel{display:none;flex-direction:column;width:360px;height:460px;background:#fff;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,0.25);overflow:hidden;border:1px solid #e7eef5;}\
-#eksido-chat-panel.eksido-open{display:flex;}\
-.eksido-header{background:#0b4d7a;color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;font-weight:bold;}\
-#eksido-chat-close{background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer;}\
-#eksido-chat-messages{flex:1;overflow:auto;padding:12px;background:#f7f9fb;}\
-.eksido-msg{margin:8px 0;max-width:85%;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.35;}\
-.eksido-msg.user{margin-left:auto;background:#0b4d7a;color:#fff;border-bottom-right-radius:2px;}\
-.eksido-msg.assistant{margin-right:auto;background:#fff;border:1px solid #e2e8f0;color:#1f2937;border-bottom-left-radius:2px;}\
-.eksido-input{display:flex;gap:8px;padding:10px;border-top:1px solid #e7eef5;background:#fff;}\
-#eksido-chat-input{flex:1;padding:10px;border:1px solid #d6dee6;border-radius:8px;font-size:14px;}\
-#eksido-chat-send{background:#0b4d7a;color:#fff;border:none;border-radius:8px;padding:10px 12px;font-size:14px;cursor:pointer;}\
-#eksido-chat-send:disabled{opacity:0.6;cursor:default;}\
-@media (max-width:480px){#eksido-chat-panel{width:90vw;height:70vh;}#eksido-chat-widget{right:10px;bottom:10px;}}\
+:root{--eksido-navy:#0b4d7a;--eksido-ink:#0b1220;--eksido-bg:#f6f8fb;--eksido-card:#ffffff;--eksido-border:#e6edf5;--eksido-muted:#6b7280;}\
+#eksido-chat-widget{position:fixed;right:18px;bottom:18px;z-index:999999;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;letter-spacing:.1px}\
+#eksido-launcher{display:flex;align-items:center;gap:10px;border:none;border-radius:999px;padding:12px 14px;background:var(--eksido-navy);color:#fff;cursor:pointer;\
+box-shadow:0 18px 45px rgba(11,77,122,.28),0 2px 8px rgba(0,0,0,.12);transition:transform .15s ease, box-shadow .15s ease;position:relative}\
+#eksido-launcher:hover{transform:translateY(-1px);box-shadow:0 22px 55px rgba(11,77,122,.32),0 2px 10px rgba(0,0,0,.14)}\
+#eksido-launcher:active{transform:translateY(0)}\
+#eksido-launcher .dot{width:10px;height:10px;border-radius:999px;background:#7dd3fc;box-shadow:0 0 0 6px rgba(125,211,252,.18)}\
+#eksido-launcher .label{font-weight:700;font-size:14px;line-height:1}\
+#eksido-launcher .sub{font-size:12px;opacity:.9;line-height:1.1}\
+#eksido-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 6px;border-radius:999px;background:#ef4444;color:#fff;font-size:12px;font-weight:700;\
+display:none;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.2)}\
+#eksido-panel{width:380px;max-width:calc(100vw - 36px);height:540px;max-height:calc(100vh - 120px);\
+background:var(--eksido-card);border:1px solid var(--eksido-border);border-radius:18px;overflow:hidden;\
+box-shadow:0 30px 90px rgba(2,6,23,.25),0 10px 30px rgba(2,6,23,.12);\
+display:none;flex-direction:column;transform-origin:bottom right;animation:eksidoIn .18s ease-out}\
+@keyframes eksidoIn{from{transform:scale(.98) translateY(6px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}\
+#eksido-panel.open{display:flex}\
+#eksido-header{background:linear-gradient(135deg, #0b4d7a 0%, #083b5f 100%);color:#fff;padding:12px 14px;display:flex;align-items:center;justify-content:space-between}\
+#eksido-header .left{display:flex;align-items:center;gap:10px}\
+#eksido-avatar{width:34px;height:34px;border-radius:12px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center}\
+#eksido-avatar svg{opacity:.95}\
+#eksido-title{display:flex;flex-direction:column;gap:2px}\
+#eksido-title .h1{font-weight:800;font-size:14px;line-height:1.1}\
+#eksido-title .h2{font-size:12px;opacity:.9;line-height:1.1;display:flex;align-items:center;gap:6px}\
+#eksido-statusDot{width:7px;height:7px;border-radius:999px;background:#34d399;box-shadow:0 0 0 5px rgba(52,211,153,.15)}\
+#eksido-actions{display:flex;align-items:center;gap:8px}\
+.eksido-iconbtn{width:34px;height:34px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}\
+.eksido-iconbtn:hover{background:rgba(255,255,255,.12)}\
+#eksido-body{flex:1;background:var(--eksido-bg);padding:12px;overflow:auto}\
+.eksido-row{display:flex;margin:10px 0}\
+.eksido-row.user{justify-content:flex-end}\
+.eksido-row.assistant{justify-content:flex-start}\
+.eksido-bubble{max-width:85%;padding:10px 12px;border-radius:14px;border:1px solid transparent;font-size:14px;line-height:1.35;white-space:pre-wrap;word-wrap:break-word}\
+.eksido-row.user .eksido-bubble{background:var(--eksido-navy);color:#fff;border-bottom-right-radius:6px}\
+.eksido-row.assistant .eksido-bubble{background:#fff;color:var(--eksido-ink);border-color:#e5e7eb;border-bottom-left-radius:6px}\
+.eksido-meta{margin-top:6px;font-size:11px;color:var(--eksido-muted);display:flex;gap:8px;align-items:center}\
+.eksido-row.user .eksido-meta{justify-content:flex-end}\
+#eksido-footer{border-top:1px solid var(--eksido-border);background:#fff;padding:10px 10px 12px}\
+#eksido-hint{font-size:12px;color:var(--eksido-muted);padding:0 2px 8px}\
+#eksido-form{display:flex;gap:8px;align-items:flex-end}\
+#eksido-input{flex:1;min-height:44px;max-height:120px;resize:none;padding:10px 12px;border:1px solid #d7e1ec;border-radius:14px;font-size:14px;line-height:1.25;outline:none}\
+#eksido-input:focus{border-color:#9cc7e5;box-shadow:0 0 0 4px rgba(156,199,229,.25)}\
+#eksido-send{height:44px;padding:0 14px;border:none;border-radius:14px;background:var(--eksido-navy);color:#fff;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px}\
+#eksido-send:disabled{opacity:.6;cursor:default}\
+#eksido-send svg{opacity:.95}\
+.eksido-thinking{display:inline-flex;gap:5px;align-items:center}\
+.eksido-thinking span{width:7px;height:7px;border-radius:999px;background:#9ca3af;display:inline-block;animation:eksidoDot 1.2s infinite ease-in-out}\
+.eksido-thinking span:nth-child(2){animation-delay:.15s}\
+.eksido-thinking span:nth-child(3){animation-delay:.3s}\
+@keyframes eksidoDot{0%,80%,100%{transform:translateY(0);opacity:.45}40%{transform:translateY(-3px);opacity:1}}\
+@media (max-width:480px){#eksido-chat-widget{right:10px;bottom:10px}#eksido-panel{width:92vw;height:72vh}}\
 ";
   document.head.appendChild(style);
 
+  // --- DOM ---
   var wrapper = document.createElement("div");
   wrapper.id = "eksido-chat-widget";
-  wrapper.innerHTML = '\
-<button id="eksido-chat-button">Chat with Eksido</button>\
-<div id="eksido-chat-panel">\
-  <div class="eksido-header">\
-    <span>Eksido Concierge</span>\
-    <button id="eksido-chat-close" aria-label="Close">×</button>\
+  wrapper.innerHTML =
+    '\
+<button id="eksido-launcher" type="button" aria-label="Open chat">\
+  <span class="dot" aria-hidden="true"></span>\
+  <span style="display:flex;flex-direction:column;align-items:flex-start;gap:2px">\
+    <span class="label">Chat with ' + BRAND_NAME + '</span>\
+    <span class="sub">Ask about services & pricing</span>\
+  </span>\
+  <span id="eksido-badge">1</span>\
+</button>\
+<div id="eksido-panel" role="dialog" aria-label="' + TITLE + '">\
+  <div id="eksido-header">\
+    <div class="left">\
+      <div id="eksido-avatar" aria-hidden="true">\
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">\
+          <path d="M12 2a7 7 0 0 1 7 7c0 2.2-1 4.1-2.6 5.4A9.5 9.5 0 0 1 21 22H3a9.5 9.5 0 0 1 4.6-7.6A6.96 6.96 0 0 1 5 9a7 7 0 0 1 7-7Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+        </svg>\
+      </div>\
+      <div id="eksido-title">\
+        <div class="h1">' + TITLE + '</div>\
+        <div class="h2"><span id="eksido-statusDot"></span><span id="eksido-statusText">Online</span></div>\
+      </div>\
+    </div>\
+    <div id="eksido-actions">\
+      <button class="eksido-iconbtn" id="eksido-clear" type="button" aria-label="Clear chat">\
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">\
+          <path d="M3 6h18M8 6V4h8v2M6 6l1 16h10l1-16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+        </svg>\
+      </button>\
+      <button class="eksido-iconbtn" id="eksido-close" type="button" aria-label="Close">\
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">\
+          <path d="M18 6 6 18M6 6l12 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+        </svg>\
+      </button>\
+    </div>\
   </div>\
-  <div id="eksido-chat-messages"></div>\
-  <div class="eksido-input">\
-    <input id="eksido-chat-input" type="text" placeholder="Type your message..." />\
-    <button id="eksido-chat-send">Send</button>\
+  <div id="eksido-body"></div>\
+  <div id="eksido-footer">\
+    <div id="eksido-hint">Tip: Press <b>Enter</b> to send, <b>Shift+Enter</b> for a new line.</div>\
+    <form id="eksido-form">\
+      <textarea id="eksido-input" rows="1" placeholder="Type your message..."></textarea>\
+      <button id="eksido-send" type="submit">\
+        <span>Send</span>\
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">\
+          <path d="M22 2 11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+          <path d="M22 2 15 22l-4-9-9-4 20-7Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\
+        </svg>\
+      </button>\
+    </form>\
   </div>\
 </div>';
   document.body.appendChild(wrapper);
 
-  var button = wrapper.querySelector("#eksido-chat-button");
-  var panel = wrapper.querySelector("#eksido-chat-panel");
-  var closeBtn = wrapper.querySelector("#eksido-chat-close");
-  var messagesEl = wrapper.querySelector("#eksido-chat-messages");
-  var inputEl = wrapper.querySelector("#eksido-chat-input");
-  var sendBtn = wrapper.querySelector("#eksido-chat-send");
+  var launcher = wrapper.querySelector("#eksido-launcher");
+  var badge = wrapper.querySelector("#eksido-badge");
+  var panel = wrapper.querySelector("#eksido-panel");
+  var closeBtn = wrapper.querySelector("#eksido-close");
+  var clearBtn = wrapper.querySelector("#eksido-clear");
+  var body = wrapper.querySelector("#eksido-body");
+  var form = wrapper.querySelector("#eksido-form");
+  var input = wrapper.querySelector("#eksido-input");
+  var sendBtn = wrapper.querySelector("#eksido-send");
+  var statusText = wrapper.querySelector("#eksido-statusText");
 
   var history = [];
-  var greeted = false;
+  var isOpen = false;
   var sending = false;
+  var unread = 0;
 
-  function appendMessage(role, text) {
-    var msg = document.createElement("div");
-    msg.className = "eksido-msg " + role;
-    msg.textContent = text;
-    messagesEl.appendChild(msg);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
+  // --- Helpers ---
+  function nowTime() {
+    var d = new Date();
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
 
-  function openPanel() {
-    panel.classList.add("eksido-open");
-    button.classList.add("eksido-hidden");
-    if (!greeted) {
-      appendMessage("assistant", "Hi! Ask me about pricing, features, or docs.");
-      greeted = true;
+  function setUnread(n) {
+    unread = n;
+    if (unread > 0) {
+      badge.style.display = "inline-flex";
+      badge.textContent = String(unread);
+    } else {
+      badge.style.display = "none";
     }
-    setTimeout(function () {
-      inputEl.focus();
-    }, 0);
   }
 
-  function closePanel() {
-    panel.classList.remove("eksido-open");
-    button.classList.remove("eksido-hidden");
+  function scrollToBottom() {
+    body.scrollTop = body.scrollHeight;
   }
 
-  function sendMessage() {
+  function addBubble(role, text, meta) {
+    var row = document.createElement("div");
+    row.className = "eksido-row " + role;
+
+    var bubble = document.createElement("div");
+    bubble.className = "eksido-bubble";
+    bubble.textContent = text;
+
+    row.appendChild(bubble);
+
+    var metaEl = document.createElement("div");
+    metaEl.className = "eksido-meta";
+    metaEl.textContent = (meta || nowTime());
+
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.maxWidth = "100%";
+    wrap.appendChild(row);
+    wrap.appendChild(metaEl);
+
+    body.appendChild(wrap);
+    scrollToBottom();
+    return { bubbleEl: bubble, metaEl: metaEl };
+  }
+
+  function addThinking() {
+    var row = document.createElement("div");
+    row.className = "eksido-row assistant";
+    var bubble = document.createElement("div");
+    bubble.className = "eksido-bubble";
+    bubble.innerHTML = '<span class="eksido-thinking" aria-label="Thinking"><span></span><span></span><span></span></span>';
+    row.appendChild(bubble);
+
+    var metaEl = document.createElement("div");
+    metaEl.className = "eksido-meta";
+    metaEl.textContent = "Thinking...";
+
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.maxWidth = "100%";
+    wrap.appendChild(row);
+    wrap.appendChild(metaEl);
+
+    body.appendChild(wrap);
+    scrollToBottom();
+
+    return { wrapEl: wrap, metaEl: metaEl };
+  }
+
+  function persist() {
+    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(history)); } catch (e) {}
+  }
+
+  function restore() {
+    try {
+      var raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return;
+      history = arr.slice(0, 50);
+      body.innerHTML = "";
+      for (var i = 0; i < history.length; i++) {
+        var h = history[i];
+        addBubble(h.role === "assistant" ? "assistant" : "user", h.content, h.meta || "");
+      }
+      scrollToBottom();
+    } catch (e) {}
+  }
+
+  function greetIfEmpty() {
+    if (history.length === 0) {
+      addBubble("assistant", GREETING, "Just now");
+      history.push({ role: "assistant", content: GREETING, meta: "Just now" });
+      persist();
+    }
+  }
+
+  function open() {
+    panel.classList.add("open");
+    isOpen = true;
+    setUnread(0);
+    restore();
+    greetIfEmpty();
+    setTimeout(function(){ input.focus(); }, 50);
+  }
+
+  function close() {
+    panel.classList.remove("open");
+    isOpen = false;
+  }
+
+  function setSending(state) {
+    sending = state;
+    sendBtn.disabled = state;
+    input.disabled = state;
+    statusText.textContent = state ? "Responding..." : "Online";
+  }
+
+  function normalizeAssistantAnswer(data) {
+    if (data && typeof data.answer === "string" && data.answer.trim()) return data.answer.trim();
+    return "I'm not sure based on what I have. Please contact support.";
+  }
+
+  // --- Events ---
+  launcher.addEventListener("click", function () {
+    if (panel.classList.contains("open")) close();
+    else open();
+  });
+  closeBtn.addEventListener("click", close);
+
+  clearBtn.addEventListener("click", function () {
+    history = [];
+    try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    body.innerHTML = "";
+    greetIfEmpty();
+    input.focus();
+  });
+
+  function autosize() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 120) + "px";
+  }
+  input.addEventListener("input", autosize);
+
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      form.dispatchEvent(new Event("submit", { cancelable: true }));
+    }
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
     if (sending) return;
-    var text = inputEl.value.trim();
+
+    var text = (input.value || "").trim();
     if (!text) return;
 
-    var historyForRequest = history.slice(-12);
-    appendMessage("user", text);
-    history.push({ role: "user", content: text });
-    inputEl.value = "";
+    autosize();
 
-    sending = true;
-    sendBtn.disabled = true;
+    addBubble("user", text);
+    history.push({ role: "user", content: text, meta: nowTime() });
+    persist();
+
+    input.value = "";
+    autosize();
+
+    var thinking = addThinking();
+
+    setSending(true);
+
+    var historyForRequest = history
+      .filter(function(h){ return h && (h.role === "user" || h.role === "assistant"); })
+      .slice(-12)
+      .map(function(h){ return { role: h.role, content: h.content }; });
 
     fetch(apiBase + "/chat?site=" + encodeURIComponent(siteParam), {
       method: "POST",
@@ -234,28 +460,30 @@ Verify:
         return res.json();
       })
       .then(function (data) {
-        var answer = (data && data.answer) ? data.answer : "I'm sorry, I don't know. Please contact support.";
-        appendMessage("assistant", answer);
-        history.push({ role: "assistant", content: answer });
+        var answer = normalizeAssistantAnswer(data);
+
+        thinking.wrapEl.remove();
+        addBubble("assistant", answer);
+
+        history.push({ role: "assistant", content: answer, meta: nowTime() });
+        persist();
+
+        if (!isOpen) setUnread(unread + 1);
       })
       .catch(function () {
-        appendMessage("assistant", "Sorry, something went wrong. Please try again.");
+        thinking.wrapEl.remove();
+        var errMsg = "Sorry - I couldn't reach the server. Please try again in a moment.";
+        addBubble("assistant", errMsg);
+        history.push({ role: "assistant", content: errMsg, meta: nowTime() });
+        persist();
+        if (!isOpen) setUnread(unread + 1);
       })
       .finally(function () {
-        sending = false;
-        sendBtn.disabled = false;
+        setSending(false);
+        input.focus();
       });
-  }
-
-  button.addEventListener("click", openPanel);
-  closeBtn.addEventListener("click", closePanel);
-  sendBtn.addEventListener("click", sendMessage);
-  inputEl.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendMessage();
-    }
   });
+
 })();
 </script>
 ```
@@ -272,7 +500,7 @@ headers: {
 
 ## Troubleshooting
 - **CORS errors**: Ensure `ALLOWED_ORIGINS` matches the exact site origin
-  (e.g., `https://eksido.com` and `https://www.eksido.com`, no trailing slash).
+  (e.g., `https://your-site.com` and `https://www.your-site.com`, no trailing slash).
 - **Vector store missing**: Run the indexing script and set
   `VECTOR_STORE_ID_SITE_1` in your environment. Confirm you are calling
   `/chat?site=eksidocom`.
